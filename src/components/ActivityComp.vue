@@ -68,9 +68,8 @@ export default {
     return {
       activities: null,
       popupTriggers: {},
-        searchQuery: "",
-            resourceTypeSuggestions: []
-
+      searchQuery: "",
+      resourceTypeSuggestions: []
     };
   },
   methods: {
@@ -83,7 +82,7 @@ export default {
         this.resourceTypeSuggestions = this.activities.map(activity => activity.resource_type);
       });
     },
-   
+
     TogglePopup(activityId) {
       this.popupTriggers[activityId] = !this.popupTriggers[activityId];
     },
