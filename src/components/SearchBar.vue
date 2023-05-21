@@ -5,19 +5,36 @@
       <div class="search-container">
         <input
           type="text"
-          :suggestions="suggestions"
           v-model="searchQuery"
           placeholder="Search timeline"
+          @input="updateSearchQuery"
         />
+        <ul class="suggestList" v-if="showSuggestions && filteredSuggestions.length">
+          <div>
+            <li
+              class="suggestListItem"
+              v-for="(suggestion, index) in filteredSuggestions"
+              :key="index"
+              @click="selectSuggestion(suggestion)"
+            >
+              {{ formatName(suggestion) }}
+            </li>
+          </div>
+        </ul>
         <button @click="handleSearch">
           <img src="../../../assets/topics/magnifying-glass.png" alt="magnifying glass" />
         </button>
       </div>
       <div class="filterList">
         <span>filter by:</span>
-        <ul>
-          <li v-for="s in suggestions" :key="s.index">
-            {{ s }}
+        <ul class="byFilterList">
+          <li
+            @click="filterSearch"
+            class="byFilterListItem"
+            v-for="s in suggestions"
+            :key="s.index"
+          >
+            {{ formatName(s) }}
           </li>
         </ul>
       </div>
@@ -31,16 +48,47 @@ export default {
     suggestions: {
       type: Array,
       required: true
+    },
+    filters: {
+      type: Array,
+      required: true
     }
   },
   data() {
     return {
-      searchQuery: ""
+      searchQuery: "",
+      showSuggestions: false
     };
   },
+  computed: {
+    filteredSuggestions() {
+      if (this.searchQuery === "") {
+        console.log(filters);
+        return this.filters;
+      }
+      const searchLowerCase = this.searchQuery.toLowerCase();
+      return this.filters.filter(f => f.toLowerCase().includes(searchLowerCase));
+    }
+  },
   methods: {
+    formatName(name) {
+      if (name.includes("_")) {
+        return name.replace(/_/g, " ");
+      }
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    },
     handleSearch() {
       this.$emit("search", this.searchQuery);
+    },
+    filterSearch() {
+      this.selectSuggestion();
+    },
+    updateSearchQuery() {
+      this.showSuggestions = true;
+    },
+    selectSuggestion(suggestion) {
+      this.searchQuery = suggestion;
+      this.showSuggestions = true;
     }
   }
 };
@@ -93,14 +141,25 @@ button {
   margin-block-end: 5px;
 }
 
-ul {
+.suggestList {
+  list-style-type: none;
+  position: relative;
+  display: inline-block;
+}
+
+.autocomplete {
+  position: relative;
+  display: inline-block;
+}
+
+.byFilterList {
   list-style-type: none;
   padding: 0;
   display: flex;
   margin-top: 5px;
 }
 
-li {
+.byFilterListItem {
   display: inline-block;
   border: 1px solid;
   margin: 5px;

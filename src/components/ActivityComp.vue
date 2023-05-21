@@ -1,53 +1,63 @@
 <template>
   <div>
-    <SearchBar @search="searchActivities" :suggestions="resourceTypeSuggestions" />
-    <ul>
-      <li v-for="activity in filteredActivities" :key="activity.id" data-test="activity">
-        <strong> {{ activity.topic_data.name }} {{ activity.resource_type }} </strong>
-        {{ formatDate(activity.d_created) }}
-        <span
-          v-if="
-            activity.resource_type == 'quiz' ||
-              activity.resource_type == 'easy_quiz' ||
-              activity.resource_type == 'challenge'
-          "
-          style="color: blue;"
-        >
-          score {{ activity.score }}/10
-        </span>
-
-        <button
-          v-if="
-            activity.resource_type === 'quiz' ||
-              activity.resource_type === 'easy_quiz' ||
-              activity.resource_type === 'challenge' ||
-              activity.resource_type === 'make_a_map' ||
-              activity.resource_type === 'word_play' ||
-              activity.resource_type === 'draw_about_it'
-          "
-          @click="TogglePopup(activity.id)"
-        >
-          view work
-        </button>
-
-        <ViewWorkComp
-          v-if="popupTriggers[activity.id]"
-          :TogglePopup="() => TogglePopup(activity.id)"
-          :activity="activity"
-        >
-          {{ activity.topic_data.name }}
-          {{ activity.resource_type }}
-          {{ formatDate(activity.d_created) }}
-          {{ activity.comment }}
+    <SearchBar
+      @search="searchActivities"
+      :suggestions="resourceTypeSuggestions"
+      :filters="activityNames"
+    />
+    <ul v-if="activitiesWithMonthHeaders">
+      <li v-for="(item, index) in activitiesWithMonthHeaders" :key="index">
+        <span v-if="item.isHeader">{{ item.month }}</span>
+        <div v-else>
+          <strong>
+            {{ formatName(item.activity.topic_data.name) }}
+            {{ formatName(item.activity.resource_type) }}
+          </strong>
+          {{ formatDate(item.activity.d_created) }}
           <span
             v-if="
-              activity.resource_type == 'quiz' ||
-                activity.resource_type == 'easy_quiz' ||
-                activity.resource_type == 'challenge'
+              item.activity.resource_type == 'quiz' ||
+                item.activity.resource_type == 'easy_quiz' ||
+                item.activity.resource_type == 'challenge'
             "
-            >score {{ activity.score }}/10</span
+            style="color: blue;"
           >
-        </ViewWorkComp>
+            score {{ item.activity.score }}/10
+          </span>
+
+          <button
+            v-if="
+              item.activity.resource_type === 'quiz' ||
+                item.activity.resource_type === 'easy_quiz' ||
+                item.activity.resource_type === 'challenge' ||
+                item.activity.resource_type === 'make_a_map' ||
+                item.activity.resource_type === 'word_play' ||
+                item.activity.resource_type === 'draw_about_it'
+            "
+            @click="TogglePopup(item.activity.id)"
+          >
+            view work
+          </button>
+
+          <ViewWorkComp
+            v-if="popupTriggers[item.activity.id]"
+            :TogglePopup="() => TogglePopup(item.activity.id)"
+            :activity="iteactivity"
+          >
+            {{ formatName(item.activity.topic_data.name) }}
+            {{ formatName(item.activity.resource_type) }}
+            {{ formatDate(item.activity.d_created) }}
+            {{ item.activity.comment }}
+            <span
+              v-if="
+                item.activity.resource_type == 'quiz' ||
+                  item.activity.resource_type == 'easy_quiz' ||
+                  item.activity.resource_type == 'challenge'
+              "
+              >score {{ item.activity.score }}/10</span
+            >
+          </ViewWorkComp>
+        </div>
       </li>
     </ul>
   </div>
@@ -69,7 +79,8 @@ export default {
       activities: null,
       popupTriggers: {},
       searchQuery: "",
-      resourceTypeSuggestions: []
+      resourceTypeSuggestions: [],
+      activityNames: []
     };
   },
   methods: {
@@ -80,11 +91,18 @@ export default {
           this.$set(this.popupTriggers, activity.id, false);
         });
         this.resourceTypeSuggestions = this.activities.map(activity => activity.resource_type);
+        this.activityNames = this.activities.map(
+          activity => `${activity.topic_data.name} ${activity.resource_type}`
+        );
       });
     },
 
     TogglePopup(activityId) {
       this.popupTriggers[activityId] = !this.popupTriggers[activityId];
+    },
+    getMonthName(timestamp) {
+      const date = new Date(timestamp * 1000);
+      return date.toLocaleString("en-US", { month: "long" });
     },
     formatDate(timestamp) {
       const date = new Date(timestamp * 1000);
@@ -99,19 +117,52 @@ export default {
       };
       return `${date.toLocaleString("en-US", options)} • ${date.toLocaleString("en-US", options2)}`;
     },
+    formatName(name) {
+      if (name.includes("_")) {
+        return name.replace(/_/g, " ");
+      }
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    },
     searchActivities(query) {
       this.searchQuery = query;
     }
   },
   computed: {
     filteredActivities() {
-      if (!this.searchQuery) {
-        return this.activities;
+      if (!this.activities) {
+        return null;
       }
-      const lowerCaseQuery = this.searchQuery.toLowerCase();
-      return this.activities.filter(activity =>
-        activity.resource_type.toLowerCase().includes(lowerCaseQuery)
-      );
+
+      let activities = [...this.activities];
+
+      if (this.searchQuery) {
+        const lowerCaseQuery = this.searchQuery.toLowerCase();
+        activities = activities.filter(activity =>
+          activity.resource_type.toLowerCase().includes(lowerCaseQuery)
+        );
+      }
+
+      return activities.sort((a, b) => b.d_created - a.d_created);
+    },
+
+    activitiesWithMonthHeaders() {
+      if (!this.filteredActivities) return null;
+
+      const result = [];
+      let currentMonth = "";
+
+      this.filteredActivities.forEach(activity => {
+        const activityMonth = this.getMonthName(activity.d_created);
+
+        if (activityMonth !== currentMonth) {
+          currentMonth = activityMonth;
+          result.push({ isHeader: true, month: currentMonth });
+        }
+
+        result.push({ isHeader: false, activity: activity });
+      });
+
+      return result;
     }
   },
 
