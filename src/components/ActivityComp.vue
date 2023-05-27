@@ -2,60 +2,78 @@
   <div>
     <SearchBar
       @search="searchActivities"
+      @select="selectActivity"
+      @filter="searchActivities"
       :suggestions="resourceTypeSuggestions"
       :filters="activityNames"
+      :activityNames="activityNames"
     />
     <ul v-if="activitiesWithMonthHeaders">
       <li v-for="(item, index) in activitiesWithMonthHeaders" :key="index">
-        <span v-if="item.isHeader">{{ item.month }}</span>
-        <div v-else>
-          <strong>
-            {{ formatName(item.activity.topic_data.name) }}
-            {{ formatName(item.activity.resource_type) }}
-          </strong>
-          {{ formatDate(item.activity.d_created) }}
-          <span
-            v-if="
-              item.activity.resource_type == 'quiz' ||
-                item.activity.resource_type == 'easy_quiz' ||
-                item.activity.resource_type == 'challenge'
-            "
-            style="color: blue;"
-          >
-            score {{ item.activity.score }}/10
-          </span>
-
-          <button
-            v-if="
-              item.activity.resource_type === 'quiz' ||
-                item.activity.resource_type === 'easy_quiz' ||
-                item.activity.resource_type === 'challenge' ||
-                item.activity.resource_type === 'make_a_map' ||
-                item.activity.resource_type === 'word_play' ||
-                item.activity.resource_type === 'draw_about_it'
-            "
-            @click="TogglePopup(item.activity.id)"
-          >
-            view work
-          </button>
-
-          <ViewWorkComp
-            v-if="popupTriggers[item.activity.id]"
-            :TogglePopup="() => TogglePopup(item.activity.id)"
-            :activity="iteactivity"
-          >
-            {{ formatName(item.activity.topic_data.name) }}
-            {{ formatName(item.activity.resource_type) }}
-            {{ formatDate(item.activity.d_created) }}
-            {{ item.activity.comment }}
+        <div v-if="item.isHeader">
+          <div class="month-container">
+            <span class="month">{{ item.month }}</span>
+          </div>
+        </div>
+        <div class="container" v-else>
+          <div class="title">
+            <strong>
+              {{ formatName(item.activity.topic_data.name) }}
+              {{ formatName(item.activity.resource_type) }}
+            </strong>
+            <span class="timestamp"> {{ formatDate(item.activity.d_created) }} </span>
+          </div>
+          <div class="score">
             <span
               v-if="
                 item.activity.resource_type == 'quiz' ||
                   item.activity.resource_type == 'easy_quiz' ||
                   item.activity.resource_type == 'challenge'
               "
-              >score {{ item.activity.score }}/10</span
+              style="color: #068283ff;"
             >
+              score <strong> {{ item.activity.score }}/10 </strong>
+            </span>
+
+            <button
+              class="viewWork"
+              v-if="
+                item.activity.resource_type === 'quiz' ||
+                  item.activity.resource_type === 'easy_quiz' ||
+                  item.activity.resource_type === 'challenge' ||
+                  item.activity.resource_type === 'make_a_map' ||
+                  item.activity.resource_type === 'word_play' ||
+                  item.activity.resource_type === 'draw_about_it'
+              "
+              @click="TogglePopup(item.activity.id)"
+            >
+              <img src="../../../assets/topics/eye.png" alt="eye" />
+              view work
+            </button>
+          </div>
+          <ViewWorkComp
+            v-if="popupTriggers[item.activity.id]"
+            :TogglePopup="() => TogglePopup(item.activity.id)"
+            :activity="item.activity"
+          >
+            <div class="popup-title">
+              {{ formatName(item.activity.topic_data.name) }}
+              {{ formatName(item.activity.resource_type) }}
+            </div>
+            <div class="popup-date">{{ formatDate(item.activity.d_created) }}</div>
+
+            <div class="popup-comment">
+              {{ item.activity.comment }}
+              <br />
+              <span
+                v-if="
+                  item.activity.resource_type == 'quiz' ||
+                    item.activity.resource_type == 'easy_quiz' ||
+                    item.activity.resource_type == 'challenge'
+                "
+                >score {{ item.activity.score }}/10</span
+              >
+            </div>
           </ViewWorkComp>
         </div>
       </li>
@@ -96,7 +114,6 @@ export default {
         );
       });
     },
-
     TogglePopup(activityId) {
       this.popupTriggers[activityId] = !this.popupTriggers[activityId];
     },
@@ -125,6 +142,12 @@ export default {
     },
     searchActivities(query) {
       this.searchQuery = query;
+    },
+
+    selectActivity(activityName) {
+      this.activities = this.activities.filter(
+        activity => `${activity.topic_data.name} ${activity.resource_type}` === activityName
+      );
     }
   },
   computed: {
@@ -171,16 +194,76 @@ export default {
 </script>
 
 <style scoped>
+.container {
+  display: inline-block;
+}
+
 ul {
   list-style-type: none;
   padding: 0;
   display: grid;
 }
 li {
-  display: inline-block;
+  display: inline-grid;
   margin: 0 10px;
   border: 1px solid;
   padding: 15px;
   margin: 5px;
+}
+
+.month-container {
+  border-radius: 4%;
+  text-align: left;
+}
+
+.month {
+  background-color: #fcf8e4;
+  width: fit-content;
+}
+
+.title {
+  text-align: left;
+}
+
+.score {
+  text-align: right;
+  grid-column-start: 2;
+  grid-column-end: five;
+  grid-row-start: row1-start;
+  grid-row-end: 3;
+}
+
+.viewWork {
+  border: none;
+  background-color: white;
+  color: #068283ff;
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.timestamp {
+  font-size: 12px;
+  text-align: left;
+  display: block;
+}
+
+img {
+  width: 15px;
+  margin-right: 6px;
+}
+
+.popup-title {
+  text-align: center;
+  font-size: 25px;
+  margin: 30px;
+}
+
+.popup-date {
+  text-align: center;
+}
+
+.popup-comment {
+  text-align: left;
 }
 </style>

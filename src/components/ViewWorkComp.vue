@@ -1,10 +1,12 @@
 <template>
   <div class="popup">
     <div class="popup-inner">
+      <div class="closepopup">
+        <button @click="TogglePopup()">
+          <img src="../../../assets/topics/cancel.png" alt="cancel" />
+        </button>
+      </div>
       <slot />
-      <button class="popup-close" @click="TogglePopup()">
-        Close Popup
-      </button>
     </div>
   </div>
 </template>
@@ -31,6 +33,22 @@ export default {
   background: #fff;
   border: 1px solid;
   border-radius: 15px;
-  padding: 32px;
+  padding: 58px;
+  width: 500px;
+  height: 200px;
+}
+
+button {
+  border: none;
+  background-color: #fff;
+}
+
+.closepopup {
+  top: 0;
+  right: 0;
+}
+
+img {
+  width: 14px;
 }
 </style>

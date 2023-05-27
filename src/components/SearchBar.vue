@@ -5,6 +5,7 @@
       <div class="search-container">
         <input
           type="text"
+          class="search-input"
           v-model="searchQuery"
           placeholder="Search timeline"
           @input="updateSearchQuery"
@@ -29,10 +30,18 @@
         <span>filter by:</span>
         <ul class="byFilterList">
           <li
-            @click="filterSearch"
+            @click="filterSearch('')"
+            class="byFilterListItem"
+            :class="{ 'selected-filter': selectedFilter === '' }"
+          >
+            All Work
+          </li>
+          <li
+            @click="filterSearch(s)"
             class="byFilterListItem"
             v-for="s in suggestions"
             :key="s.index"
+            :class="{ 'selected-filter': selectedFilter === s }"
           >
             {{ formatName(s) }}
           </li>
@@ -52,22 +61,38 @@ export default {
     filters: {
       type: Array,
       required: true
+    },
+    activityNames: {
+      type: Array,
+      required: true
     }
   },
   data() {
     return {
       searchQuery: "",
-      showSuggestions: false
+      showSuggestions: false,
+      selectedFilter: ""
     };
   },
   computed: {
     filteredSuggestions() {
       if (this.searchQuery === "") {
-        console.log(filters);
-        return this.filters;
+        return this.activityNames;
       }
       const searchLowerCase = this.searchQuery.toLowerCase();
-      return this.filters.filter(f => f.toLowerCase().includes(searchLowerCase));
+
+      return this.activityNames.filter(f => f.toLowerCase().includes(searchLowerCase));
+    },
+    filteredActivities() {
+      if (this.searchQuery === "") {
+        return this.activities;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.activities.filter(activity =>
+        `${activity.topic_data.name} ${activity.resource_type}`
+          .toLowerCase()
+          .includes(lowerCaseQuery)
+      );
     }
   },
   methods: {
@@ -80,15 +105,17 @@ export default {
     handleSearch() {
       this.$emit("search", this.searchQuery);
     },
-    filterSearch() {
-      this.selectSuggestion();
+    filterSearch(suggestion) {
+      this.selectedFilter = suggestion;
+      this.$emit("filter", suggestion);
     },
     updateSearchQuery() {
       this.showSuggestions = true;
     },
     selectSuggestion(suggestion) {
       this.searchQuery = suggestion;
-      this.showSuggestions = true;
+      this.showSuggestions = false;
+      this.$emit("select", suggestion);
     }
   }
 };
@@ -126,30 +153,43 @@ span {
 
 img {
   width: 10px;
-  background-color: green;
+  background-color: #068283ff;
 }
 
 button {
-  background-color: green;
-  border: 1px solid green;
+  background-color: #068283ff;
+  border: 1px solid #068283ff;
   border-radius: 3%;
 }
 .search-container {
   display: flex;
+  position: relative;
   align-items: center;
   margin-block-start: 5px;
   margin-block-end: 5px;
 }
 
-.suggestList {
-  list-style-type: none;
-  position: relative;
-  display: inline-block;
+.search-input {
+  width: 200px;
 }
 
-.autocomplete {
-  position: relative;
+.suggestList {
+  list-style-type: none;
   display: inline-block;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  z-index: 100;
+  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestListItem {
+  list-style-type: none;
+  padding: 5px;
 }
 
 .byFilterList {
@@ -164,10 +204,14 @@ button {
   border: 1px solid;
   margin: 5px;
   width: fit-content;
-  color: green;
+  color: #068283ff;
   border-radius: 4px;
   padding: 8px;
   margin: 4px;
   font-size: 12px;
+}
+
+.selected-filter {
+  background-color: #edfcfcff;
 }
 </style>
