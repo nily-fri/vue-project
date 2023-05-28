@@ -1,7 +1,6 @@
 <template>
   <div>
     <SearchBar
-      @search="searchActivities"
       @select="selectActivity"
       @filter="searchActivities"
       :suggestions="resourceTypeSuggestions"
@@ -16,12 +15,25 @@
           </div>
         </div>
         <div class="container" v-else>
-          <div class="title">
-            <strong>
-              {{ formatName(item.activity.topic_data.name) }}
-              {{ formatName(item.activity.resource_type) }}
-            </strong>
-            <span class="timestamp"> {{ formatDate(item.activity.d_created) }} </span>
+          <div style="display: flex; padding-right: 10px;">
+            <img
+              class="icon"
+              :src="'../' + item.activity.topic_data.icon_path"
+              :alt="item.activity.topic_data.name"
+            />
+            <img
+              v-if="item.activity.product == 'bpjr'"
+              :src="'../' + item.activity.topic_data.icon_path"
+              class="product"
+            />
+            <div class="title">
+              <strong>
+                {{ formatName(item.activity.topic_data.name) }}
+                {{ formatName(item.activity.resource_type) }}
+                {{ formatName(item.activity.product) }}
+              </strong>
+              <span class="timestamp"> {{ formatDate(item.activity.d_created) }} </span>
+            </div>
           </div>
           <div class="score">
             <span
@@ -47,7 +59,7 @@
               "
               @click="TogglePopup(item.activity.id)"
             >
-              <img src="../../../assets/topics/eye.png" alt="eye" />
+              <img class="eye-icon" src="../../../assets/topics/eye.png" alt="eye" />
               view work
             </button>
           </div>
@@ -56,6 +68,11 @@
             :TogglePopup="() => TogglePopup(item.activity.id)"
             :activity="item.activity"
           >
+            <img
+              class="popup-img"
+              :src="'../' + item.activity.topic_data.icon_path"
+              :alt="item.activity.topic_data.name"
+            />
             <div class="popup-title">
               {{ formatName(item.activity.topic_data.name) }}
               {{ formatName(item.activity.resource_type) }}
@@ -195,7 +212,8 @@ export default {
 
 <style scoped>
 .container {
-  display: inline-block;
+  display: flex;
+  justify-content: space-between;
 }
 
 ul {
@@ -209,6 +227,14 @@ li {
   border: 1px solid;
   padding: 15px;
   margin: 5px;
+}
+
+.icon {
+  width: 40px;
+  left: 0;
+  display: flex;
+  border-radius: 100%;
+  margin-right: 16px;
 }
 
 .month-container {
@@ -227,10 +253,15 @@ li {
 
 .score {
   text-align: right;
-  grid-column-start: 2;
-  grid-column-end: five;
-  grid-row-start: row1-start;
-  grid-row-end: 3;
+}
+
+.product {
+  background-color: orange;
+  border-radius: 100%;
+  position: absolute;
+  left: 60px;
+  margin-top: 25px;
+  width: 15px;
 }
 
 .viewWork {
@@ -248,7 +279,7 @@ li {
   display: block;
 }
 
-img {
+.eye-icon {
   width: 15px;
   margin-right: 6px;
 }
@@ -265,5 +296,10 @@ img {
 
 .popup-comment {
   text-align: left;
+}
+
+.popup-img {
+  width: 40px;
+  border-radius: 100%;
 }
 </style>

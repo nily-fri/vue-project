@@ -36,6 +36,7 @@ export default {
   padding: 58px;
   width: 500px;
   height: 200px;
+  position: relative;
 }
 
 button {
@@ -44,11 +45,12 @@ button {
 }
 
 .closepopup {
-  top: 0;
-  right: 0;
+  top: 10px;
+  right: 10px;
+  position: absolute;
 }
 
 img {
-  width: 14px;
+  width: 20px;
 }
 </style>
