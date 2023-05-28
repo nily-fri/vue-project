@@ -7,8 +7,8 @@
       :filters="activityNames"
       :activityNames="activityNames"
     />
-    <ul v-if="activitiesWithMonthHeaders">
-      <li v-for="(item, index) in activitiesWithMonthHeaders" :key="index">
+    <ul v-if="activitiesToDisplay">
+      <li v-for="(item, index) in activitiesToDisplay.slice(0, totalDisplayed)" :key="index">
         <div v-if="item.isHeader">
           <div class="month-container">
             <span class="month">{{ item.month }}</span>
@@ -16,14 +16,17 @@
         </div>
         <div class="container" v-else>
           <div style="display: flex; padding-right: 10px;">
+            <button class="hide-icon" @click="toggleHideActivity(item.activity.id)">
+              Hide
+            </button>
             <img
               class="icon"
-              :src="'../../..' + item.activity.topic_data.icon_path"
+              :src="'../' + item.activity.topic_data.icon_path"
               :alt="item.activity.topic_data.name"
             />
             <img
               v-if="item.activity.product == 'bpjr'"
-              :src="'../../..' + item.activity.topic_data.icon_path"
+              :src="'../' + item.activity.topic_data.icon_path"
               class="product"
             />
             <div class="title">
@@ -69,7 +72,7 @@
           >
             <img
               class="popup-img"
-              :src="'../../..' + item.activity.topic_data.icon_path"
+              :src="'../' + item.activity.topic_data.icon_path"
               :alt="item.activity.topic_data.name"
             />
             <div class="popup-title">
@@ -94,6 +97,10 @@
         </div>
       </li>
     </ul>
+    <button class="load-more" v-if="totalDisplayed < activitiesToDisplay.length" @click="loadMore">
+      <img class="down-arrow" src="../assets/down.png" alt="down" />
+      Load more
+    </button>
   </div>
 </template>
 
@@ -110,25 +117,37 @@ export default {
   },
   data() {
     return {
-      activities: null,
       popupTriggers: {},
       searchQuery: "",
       resourceTypeSuggestions: [],
-      activityNames: []
+      activityNames: [],
+      activities: [],
+      perPage: 10,
+      totalDisplayed: 10,
+      hiddenActivities: {}
     };
   },
   methods: {
     getActivities() {
-      axios.get("http://localhost:3000/activities/v1").then(response => {
-        this.activities = response.data;
-        this.activities.forEach(activity => {
-          this.$set(this.popupTriggers, activity.id, false);
+      axios.get(`http://localhost:3000/activities/v1`).then(response => {
+        this.activities = [];
+        response.data.forEach(resource => {
+          this.activities.push(resource);
+          this.$set(this.popupTriggers, resource.id, false);
         });
-        this.resourceTypeSuggestions = this.activities.map(activity => activity.resource_type);
+        this.resourceTypeSuggestions = [
+          ...new Set(this.activities.map(activity => activity.resource_type))
+        ];
         this.activityNames = this.activities.map(
           activity => `${activity.topic_data.name} ${activity.resource_type}`
         );
       });
+    },
+    loadMore() {
+      this.totalDisplayed += this.perPage;
+    },
+    toggleHideActivity(activityId) {
+      this.$set(this.hiddenActivities, activityId, true);
     },
     TogglePopup(activityId) {
       this.popupTriggers[activityId] = !this.popupTriggers[activityId];
@@ -182,6 +201,12 @@ export default {
       }
 
       return activities.sort((a, b) => b.d_created - a.d_created);
+    },
+
+    activitiesToDisplay() {
+      return this.activitiesWithMonthHeaders.filter(item => {
+        return item.isHeader || !this.hiddenActivities[item.activity.id];
+      });
     },
 
     activitiesWithMonthHeaders() {
@@ -263,6 +288,13 @@ li {
   width: 15px;
 }
 
+.load-more {
+  font-weight: bold;
+  border: none;
+  color: #068283ff;
+  background-color: white;
+}
+
 .viewWork {
   border: none;
   background-color: white;
@@ -300,5 +332,14 @@ li {
 .popup-img {
   width: 40px;
   border-radius: 100%;
+}
+
+.down-arrow {
+  width: 15px;
+}
+
+.hide-icon {
+  position: absolute;
+  right: 0;
 }
 </style>
