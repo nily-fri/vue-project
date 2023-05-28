@@ -30,7 +30,6 @@
               <strong>
                 {{ formatName(item.activity.topic_data.name) }}
                 {{ formatName(item.activity.resource_type) }}
-                {{ formatName(item.activity.product) }}
               </strong>
               <span class="timestamp"> {{ formatDate(item.activity.d_created) }} </span>
             </div>

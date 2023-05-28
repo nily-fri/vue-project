@@ -12,7 +12,7 @@ const routes = [
     component: Home
   },
   {
-    path: "/view-work/:id",
+    path: "/view-work",
     name: "viewWork",
     component: viewWork
   }
